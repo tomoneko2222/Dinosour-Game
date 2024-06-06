@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Chrome Dino Enhanced GUI
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Add a draggable GUI with god mode, auto play, cactus delete, and speed control to the Chrome Dino game
+// @version      0.2
+// @description  Add a draggable GUI with god mode, auto play, cactus delete, speed control, and invisibility to the Chrome Dino game
 // @author       Copilot
 // @match        https://chromedino.com/
 // @grant        none
@@ -17,7 +17,7 @@
         top: 10px;
         right: 10px;
         width: 150px;
-        height: 350px; /* 高さを調整 */
+        height: 400px; /* 高さを調整 */
         background-color: black;
         color: white;
         padding: 10px;
@@ -60,7 +60,7 @@
 
     // Autoプレイのテキストラベルを作成
     const autoLabel = document.createElement('label');
-    autoLabel.innerText = 'Auto';
+    autoLabel.innerText = 'Auto play';
     autoLabel.appendChild(autoCheckbox);
 
     // Autoプレイの関数を定義
@@ -130,7 +130,7 @@
 
     // Cactus Deleteのテキストラベルを作成
     const cactusLabel = document.createElement('label');
-    cactusLabel.innerText = 'Cactus Delete';
+    cactusLabel.innerText = 'Obstacle delete';
     cactusLabel.appendChild(cactusCheckbox);
 
     // Cactus Deleteの状態を管理する変数
@@ -178,6 +178,30 @@
         }
     });
 
+    // Invisibleチェックボックスとラベルのコンテナを作成
+    const invisibleContainer = document.createElement('div');
+
+    // Invisibleチェックボックスを作成
+    const invisibleCheckbox = document.createElement('input');
+    invisibleCheckbox.setAttribute('type', 'checkbox');
+    invisibleCheckbox.style.cssText = 'margin-right: 5px;';
+
+    // Invisibleテキストラベルを作成
+    const invisibleLabel = document.createElement('label');
+    invisibleLabel.innerText = 'Invisible';
+    invisibleLabel.appendChild(invisibleCheckbox);
+
+    // Invisibleの状態が変更されたときのイベントリスナーを追加
+    invisibleCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            // Invisibleを開始
+            Runner.instance_.tRex.groundYPos = -100;
+        } else {
+            // Invisibleを停止
+            Runner.instance_.tRex.groundYPos = 100;
+        }
+    });
+
     // Godmodeチェックボックスとラベルをコンテナに追加
     godmodeContainer.appendChild(godmodeCheckbox);
     godmodeContainer.appendChild(godmodeLabel);
@@ -193,12 +217,17 @@
     // 速度調整のコンテナをGUIに追加
     speedContainer.appendChild(speedLabel);
 
-    // GUIにタイトル、GodmodeとAutoプレイ、Cactus Delete、速度調整のコンテナを追加
+    // Invisibleチェックボックスとラベルをコンテナに追加
+    invisibleContainer.appendChild(invisibleCheckbox);
+    invisibleContainer.appendChild(invisibleLabel);
+
+    // GUIにタイトル、GodmodeとAutoプレイ、Cactus Delete、速度調整、Invisibleのコンテナを追加
     guiElement.appendChild(title);
     guiElement.appendChild(godmodeContainer);
     guiElement.appendChild(autoContainer);
     guiElement.appendChild(cactusContainer);
     guiElement.appendChild(speedContainer);
+    guiElement.appendChild(invisibleContainer);
 
     // GUIをページに追加
     document.body.appendChild(guiElement);
