@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Chrome Dino Enhanced GUI
 // @namespace    http://tampermonkey.net/
-// @version      0.2
-// @description  Add a draggable GUI with god mode, auto play, cactus delete, speed control, and invisibility to the Chrome Dino game
+// @version      0.3
+// @description  Add a draggable GUI with god mode, auto play, cactus delete, speed control, invisibility, and score input to the Chrome Dino game
 // @author       Copilot
 // @match        https://chromedino.com/
 // @grant        none
@@ -17,7 +17,7 @@
         top: 10px;
         right: 10px;
         width: 150px;
-        height: 400px; /* 高さを調整 */
+        height: 450px; /* 高さを調整 */
         background-color: black;
         color: white;
         padding: 10px;
@@ -202,6 +202,30 @@
         }
     });
 
+    // Score入力テキストボックスとラベルのコンテナを作成
+    const scoreContainer = document.createElement('div');
+    scoreContainer.style.cssText = 'margin-bottom: 10px;';
+
+    // Score入力テキストボックスを作成
+    const scoreInput = document.createElement('input');
+    scoreInput.setAttribute('type', 'text');
+    scoreInput.style.cssText = 'width: 50px; margin-right: 5px;';
+
+    // Scoreテキストラベルを作成
+    const scoreLabel = document.createElement('label');
+    scoreLabel.innerText = 'Score';
+    scoreLabel.appendChild(scoreInput);
+
+    // Score入力テキストボックスの値が変更されたときのイベントリスナーを追加
+    scoreInput.addEventListener('input', function() {
+        const value = this.value.trim();
+        const numericValue = parseInt(value, 10);
+
+        if (!isNaN(numericValue)) {
+            Runner.instance_.distanceRan = numericValue / Runner.instance_.distanceMeter.config.COEFFICIENT;
+        }
+    });
+
     // Godmodeチェックボックスとラベルをコンテナに追加
     godmodeContainer.appendChild(godmodeCheckbox);
     godmodeContainer.appendChild(godmodeLabel);
@@ -221,13 +245,81 @@
     invisibleContainer.appendChild(invisibleCheckbox);
     invisibleContainer.appendChild(invisibleLabel);
 
-    // GUIにタイトル、GodmodeとAutoプレイ、Cactus Delete、速度調整、Invisibleのコンテナを追加
+    // Score入力テキストボックスとラベルをコンテナに追加
+    scoreContainer.appendChild(scoreLabel);
+
+    // Flyチェックボックスとラベルのコンテナを作成
+    const flyContainer = document.createElement('div');
+
+    // Flyチェックボックスを作成
+    const flyCheckbox = document.createElement('input');
+    flyCheckbox.setAttribute('type', 'checkbox');
+    flyCheckbox.style.cssText = 'margin-right: 5px;';
+
+    // Flyテキストラベルを作成
+    const flyLabel = document.createElement('label');
+    flyLabel.innerText = 'Fly';
+    flyLabel.appendChild(flyCheckbox);
+
+    // Flyの状態を管理する変数
+    let flyKeyListener;
+
+    // Flyのチェックボックスの状態が変更されたときのイベントリスナーを追加
+    flyCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            // 初期座標を設定
+            Runner.instance_.tRex.xPos = 0;
+            Runner.instance_.tRex.groundYPos = 100;
+
+            // キーイベントリスナーを追加
+            flyKeyListener = function(event) {
+                switch (event.code) {
+                    case 'KeyW': // 'w' キーで Y 座標を減らす
+                        Runner.instance_.tRex.groundYPos -= 10;
+                        Runner.instance_.tRex.setJumpVelocity(0);
+                        Runner.instance_.tRex.startJump(0);
+                        console.log('Y position decreased: ' + Runner.instance_.tRex.groundYPos);
+                        break;
+                    case 'KeyS': // 's' キーで Y 座標を増やす
+                        Runner.instance_.tRex.groundYPos += 10;
+                        Runner.instance_.tRex.setJumpVelocity(0);
+                        Runner.instance_.tRex.startJump(0);
+                        console.log('Y position increased: ' + Runner.instance_.tRex.groundYPos);
+                        break;
+                    case 'KeyA': // 'a' キーで X 座標を減らす（左に移動）
+                        Runner.instance_.tRex.xPos -= 10;
+                        console.log('X position decreased: ' + Runner.instance_.tRex.xPos);
+                        break;
+                    case 'KeyD': // 'd' キーで X 座標を増やす（右に移動）
+                        Runner.instance_.tRex.xPos += 10;
+                        console.log('X position increased: ' + Runner.instance_.tRex.xPos);
+                        break;
+                }
+            };
+            document.addEventListener('keydown', flyKeyListener);
+        } else {
+            // 初期位置に戻し、ジャンプ力を元に戻す
+            Runner.instance_.tRex.xPos = 0;
+            Runner.instance_.tRex.groundYPos = 100;
+            Runner.instance_.tRex.setJumpVelocity(10); // デフォルトのジャンプ力に戻す
+            Runner.instance_.tRex.startJump(10); // ジャンプして元の位置に戻る
+            document.removeEventListener('keydown', flyKeyListener);
+        }
+    });
+
+    // Flyチェックボックスとラベルをコンテナに追加
+    flyContainer.appendChild(flyCheckbox);
+    flyContainer.appendChild(flyLabel);
+
+    // GUIにタイトル、GodmodeとAutoプレイ、Cactus Delete、速度調整、Invisible、Score、Flyのコンテナを追加
     guiElement.appendChild(title);
     guiElement.appendChild(godmodeContainer);
     guiElement.appendChild(autoContainer);
     guiElement.appendChild(cactusContainer);
     guiElement.appendChild(speedContainer);
     guiElement.appendChild(invisibleContainer);
+    guiElement.appendChild(scoreContainer);
+    guiElement.appendChild(flyContainer);
 
     // GUIをページに追加
     document.body.appendChild(guiElement);
